@@ -1,56 +1,50 @@
-use std::{fs::File, io::BufRead};
+use std::{fs::File, io::BufRead, collections::HashSet};
 
-fn count(priorities: &Vec<char>) -> usize {
-    priorities.iter().map(|item| {
-        match item {
-            'a'..='z' => {
-                *item as usize - 96
-            },
-            'A'..='Z' => {
-                *item as usize - 64 + 26
-            },
-            _ => 0
-        }
-    }).sum()
+fn priority_value(letter: &char) -> usize {
+    match letter {
+        'a'..='z' => {
+            *letter as usize - 96
+        },
+        'A'..='Z' => {
+            *letter as usize - 64 + 26
+        },
+        _ => 0
+    }
 }
 
 fn main() {
     // Part 1
-    let mut priorities_pt1: Vec<char> = Vec::new();
+    let mut priorities_pt1: usize = 0;
     for line in std::io::BufReader::new(File::open("input.txt").unwrap())
         .lines()
         .flatten()
     {
-        let first_pocket: Vec<char> = line.chars().take(line.len() / 2).collect();
-        let mut second_pocket: Vec<char> = line.chars().rev().take(line.len() / 2).collect();
-        second_pocket.sort();
-        second_pocket.dedup();
+        let first_pocket: HashSet<char> = line.chars().take(line.len() / 2).collect();
+        let second_pocket: HashSet<char> = line.chars().rev().take(line.len() / 2).collect();
         for item in second_pocket.iter() {
-            if first_pocket.contains(&item) {
-                priorities_pt1.push(item.to_owned());
+            if first_pocket.contains(item) {
+                priorities_pt1 += priority_value(item);
+                break;
             }
         }
     }
     
-    let mut priorities_pt2: Vec<char> = Vec::new();
-    let mut group: Vec<Vec<char>> = Vec::new();
+    // Part 2
+    let mut priorities_pt2: usize = 0;
     for line in std::io::BufReader::new(File::open("input.txt").unwrap())
         .lines()
         .flatten()
+        .collect::<Vec<String>>()
+        .chunks(3)
     {
-        if group.len() == 2 {
-            let mut current_line: Vec<char> = line.chars().collect();
-            current_line.retain(|&item| {
-                group.get(0).unwrap().contains(&item) && group.get(1).unwrap().contains(&item)
-            });
-            current_line.dedup();
-            priorities_pt2.append(&mut current_line);
-            group.clear();
-        } else {
-            group.push(line.chars().collect());
+        for item in line[0].chars().collect::<HashSet<char>>().iter() {
+            if line[1].chars().collect::<HashSet<char>>().contains(item) && line[2].chars().collect::<HashSet<char>>().contains(item) {
+                priorities_pt2 += priority_value(item);
+                break;
+            }
         }
     }
 
-    println!("Total of priorities for part 1 = {}", count(&priorities_pt1));
-    println!("Total of grouped priorities for part 2 = {}", count(&priorities_pt2));
+    println!("Total of priorities for part 1 = {}", priorities_pt1);
+    println!("Total of grouped priorities for part 2 = {}", priorities_pt2);
 }
