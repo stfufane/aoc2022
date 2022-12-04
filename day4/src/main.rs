@@ -1,35 +1,36 @@
+use itertools::Itertools;
+
 fn main() {
     const INPUT: &str = include_str!("../input.txt");
 
-    // Part 1 
-    // List of ranges that are overlap completely
-    let full_overlaps: usize = INPUT
-        .lines()
-        .map(|line| line.split_once(',').unwrap())
-        .map(|(l, r)| vec![l.split_once('-').unwrap(), r.split_once('-').unwrap()])
-        .map(|ranges| -> usize {
-            ((ranges[0].0.parse::<i32>().unwrap() <= ranges[1].0.parse::<i32>().unwrap()
-                && ranges[0].1.parse::<i32>().unwrap() >= ranges[1].1.parse::<i32>().unwrap())
-                || (ranges[1].0.parse::<i32>().unwrap() <= ranges[0].0.parse::<i32>().unwrap()
-                    && ranges[1].1.parse::<i32>().unwrap() >= ranges[0].1.parse::<i32>().unwrap()))
-            .into()
-        })
-        .sum();
+    type Sections = (u8, u8, u8, u8);
 
-    // Part 2
-    // List of ranges that overlap partially
-    let partial_overlaps: usize = INPUT
+    // Parse once with a multi split
+    let all_sections: Vec<Sections> = INPUT
         .lines()
-        .map(|line| line.split_once(',').unwrap())
-        .map(|(l, r)| vec![l.split_once('-').unwrap(), r.split_once('-').unwrap()])
-        .map(|ranges| -> usize {
-            ((ranges[0].1.parse::<i32>().unwrap() >= ranges[1].0.parse::<i32>().unwrap()
-                && ranges[0].0.parse::<i32>().unwrap() <= ranges[1].0.parse::<i32>().unwrap())
-                || (ranges[1].1.parse::<i32>().unwrap() >= ranges[0].0.parse::<i32>().unwrap()
-                    && ranges[1].0.parse::<i32>().unwrap() <= ranges[0].0.parse::<i32>().unwrap()))
-            .into()
+        .map(|line| {
+            line.split(&[',', '-'])
+                .map(|s| s.parse().unwrap())
+                .collect_tuple()
+                .unwrap()
         })
-        .sum();
+        .collect_vec();
+
+    // Part 1 : Check the sections totally overlap
+    let full_overlaps: usize = all_sections.iter().map(|&section| -> usize {
+        let (s1_start, s1_end, s2_start, s2_end) = section;
+        ((s1_start <= s2_start && s1_end >= s2_end) ||
+        (s2_start <= s1_start && s2_end >= s1_end))
+        .into() 
+    }).sum();
+
+    // Part 2 : Check the sections partially overlapp
+    let partial_overlaps: usize = all_sections.iter().map(|&section| -> usize {
+        let (s1_start, s1_end, s2_start, s2_end) = section;
+        ((s1_end >= s2_start && s1_start <= s2_start) || 
+        (s2_end >= s1_start && s2_start <= s1_start))
+        .into()
+    }).sum();
 
     println!("Full overlaps = {}", full_overlaps);
     println!("Partial overlaps = {}", partial_overlaps);
