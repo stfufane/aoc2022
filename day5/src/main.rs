@@ -1,5 +1,3 @@
-use std::collections::VecDeque;
-
 use itertools::Itertools;
 
 fn main() {
@@ -7,15 +5,13 @@ fn main() {
     const CARGO: &str = include_str!("../cargo.txt");
     const MOVES: &str = include_str!("../moves.txt");
 
-    let mut stacks: Vec<VecDeque<char>> = Vec::new();
-    stacks.resize(9, VecDeque::new());
-
-    CARGO.lines().for_each(|line| {
+    let mut stacks: Vec<Vec<char>> = Vec::new();
+    stacks.resize(9, Vec::new());
+    CARGO.lines().rev().for_each(|line| {
         for stack in 0..9 {
             let package = line.chars().nth(stack * 4 + 1).unwrap();
             if package != ' ' {
-                // Reading from top to bottom, so I insert at the beginning.
-                stacks[stack].push_front(package);
+                stacks[stack].push(package);
             }
         }
     });
@@ -38,8 +34,8 @@ fn main() {
     for (num, from, to) in moves.iter() {
         // Taking items one by one.
         for _i in 0..*num+1 {
-            let from_stack = stacks.get_mut(*from).unwrap().pop_back().unwrap();
-            stacks.get_mut(*to).unwrap().push_back(from_stack);
+            let from_stack = stacks.get_mut(*from).unwrap().pop().unwrap();
+            stacks.get_mut(*to).unwrap().push(from_stack);
         }
     }
 
@@ -52,6 +48,6 @@ fn main() {
     }
 
     for stack in stacks.iter() {
-        print!("{}", stack.back().unwrap());
+        print!("{}", stack.last().unwrap());
     }
 }
