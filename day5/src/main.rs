@@ -20,13 +20,13 @@ fn main() {
         }
     });
 
-    type Move = (u8, u8, u8);
+    type Move = (usize, usize, usize);
     let moves: Vec<Move> = MOVES.lines()
         .map(|line| line.split(' ')
         .filter_map(|s| { 
             // Get rid of non number characters
-            match s.parse() {
-                Ok(v) => Some(v),
+            match s.parse::<usize>() {
+                Ok(v) => Some(v - 1), // -1 for cleaner indexing in loops
                 Err(_) => None
             }
         })
@@ -37,18 +37,18 @@ fn main() {
     // Rearranging for part 1.
     for (num, from, to) in moves.iter() {
         // Taking items one by one.
-        for _i in 0..*num {
-            let from_stack = stacks.get_mut(*from as usize - 1).unwrap().pop_back().unwrap();
-            stacks.get_mut(*to as usize - 1).unwrap().push_back(from_stack);
+        for _i in 0..*num+1 {
+            let from_stack = stacks.get_mut(*from).unwrap().pop_back().unwrap();
+            stacks.get_mut(*to).unwrap().push_back(from_stack);
         }
     }
 
     // Rearranging for part 2.
     for (num, from, to) in moves.iter() {
-        let from_stack = stacks.get_mut(*from as usize - 1).unwrap();
+        let from_stack = stacks.get_mut(*from).unwrap();
         // Taking a block of items.
-        let top_packets = from_stack.split_off(from_stack.len() - *num as usize);
-        stacks.get_mut(*to as usize - 1).unwrap().append(&mut top_packets.to_owned());
+        let top_packets = from_stack.split_off(from_stack.len() - (*num + 1));
+        stacks.get_mut(*to).unwrap().append(&mut top_packets.to_owned());
     }
 
     for stack in stacks.iter() {
