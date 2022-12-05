@@ -35,8 +35,7 @@ fn main() {
     ).collect();
 
     // Rearranging for part 1.
-    for m in moves.iter() {
-        let (num, from, to) = m;
+    for (num, from, to) in moves.iter() {
         // Taking items one by one.
         for _i in 0..*num {
             let from_stack = stacks.get_mut(*from as usize - 1).unwrap().pop_back().unwrap();
@@ -45,8 +44,7 @@ fn main() {
     }
 
     // Rearranging for part 2.
-    for m in moves.iter() {
-        let (num, from, to) = m;
+    for (num, from, to) in moves.iter() {
         let from_stack = stacks.get_mut(*from as usize - 1).unwrap();
         // Taking a block of items.
         let top_packets = from_stack.split_off(from_stack.len() - *num as usize);
