@@ -17,16 +17,14 @@ fn main() {
         .collect_vec();
 
     // Part 1 : Check the sections totally overlap
-    let full_overlaps: usize = all_sections.iter().map(|&section| -> usize {
-        let (s1_start, s1_end, s2_start, s2_end) = section;
+    let full_overlaps: usize = all_sections.iter().map(|&(s1_start, s1_end, s2_start, s2_end)| -> usize {
         ((s1_start <= s2_start && s1_end >= s2_end) ||
         (s2_start <= s1_start && s2_end >= s1_end))
         .into() 
     }).sum();
 
     // Part 2 : Check the sections partially overlapp
-    let partial_overlaps: usize = all_sections.iter().map(|&section| -> usize {
-        let (s1_start, s1_end, s2_start, s2_end) = section;
+    let partial_overlaps: usize = all_sections.iter().map(|&(s1_start, s1_end, s2_start, s2_end)| -> usize {
         ((s1_end >= s2_start && s1_start <= s2_start) || 
         (s2_end >= s1_start && s2_start <= s1_start))
         .into()
