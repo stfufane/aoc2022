@@ -2,14 +2,10 @@ use std::collections::HashSet;
 
 // This solution feels totally not idiomatic, got to find something cleaner.
 fn find_index_after_n_unique(input: &str, n: usize) -> usize {
-    let mut i: usize = 0;
-    while i < input.len() - n {
-        let slice = input.get(i..i+n).unwrap();
-        let unique: HashSet<char> = slice.chars().collect();
-        if unique.len() == n {
+    for i in 0..(input.len() - n) { 
+        if input.get(i..i+n).unwrap().chars().collect::<HashSet<char>>().len() == n {
             return i + n;
         }
-        i += 1;
     }
     input.len()
 }
