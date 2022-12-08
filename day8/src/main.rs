@@ -1,3 +1,5 @@
+use take_until::TakeUntilExt;
+
 fn main() {
     const INPUT: &str = include_str!("../input.txt");
 
@@ -17,6 +19,7 @@ fn main() {
     }
 
     let mut nb_visible = 0;
+    let mut area: usize = 0;
     for (pos, value) in values.iter().enumerate() {
         // No need to calculate for first line, last line and edges
         if pos < line_len
@@ -30,6 +33,7 @@ fn main() {
         let current_line = pos / line_len;
         let current_col = pos % line_len;
 
+        // Part 1 : check if the tree is visible.
         if value
             > lines[current_line][0..current_col]
                 .into_iter()
@@ -53,7 +57,29 @@ fn main() {
         {
             nb_visible += 1;
         }
+
+        // Part 2 : Calculate how many trees I can see from here
+        let left_trees = lines[current_line][0..current_col]
+            .into_iter()
+            .rev()
+            .take_until(|t| t >= &value)
+            .count();
+        let right_trees = lines[current_line][current_col + 1..line_len]
+            .into_iter()
+            .take_until(|t| t >= &value)
+            .count();
+        let top_trees = cols[current_col][0..current_line]
+            .into_iter()
+            .rev()
+            .take_until(|t| t >= &value)
+            .count();
+        let bottom_trees = cols[current_col][current_line + 1..line_len]
+            .into_iter()
+            .take_until(|t| t >= &value)
+            .count();
+        area = area.max(left_trees * right_trees * top_trees * bottom_trees);
     }
 
     println!("There are {} visible trees", nb_visible);
+    println!("The top area is {}", area);
 }
