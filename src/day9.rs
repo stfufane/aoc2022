@@ -1,4 +1,4 @@
-use std::{collections::HashSet};
+use std::collections::HashSet;
 
 #[derive(Hash, PartialEq, Eq, Clone, Debug)]
 struct Knot {
@@ -62,7 +62,7 @@ fn nb_visited(input: &str, nb_knots: usize) -> usize {
             knots.get_mut(0).unwrap().translate(&instruction);
             // Then iterate all the remaining knots to move them according to the previous one.
             for k in 1..knots.len() {
-                let prev_knot = &knots[k-1].clone();
+                let prev_knot = &knots[k - 1].clone();
                 if knots[k].is_too_far(prev_knot) {
                     knots[k].get_closer(prev_knot);
                 }
@@ -81,4 +81,19 @@ fn main() {
 
     println!("Nb visited on part 1 : {}", nb_visited(INPUT, 2));
     println!("Nb visited on part 2 : {}", nb_visited(INPUT, 10));
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn validate_example_input_1() {
+        assert_eq!(nb_visited(include_str!("../inputs/day9_ex1.txt"), 2), 13);
+    }
+
+    #[test]
+    fn validate_example_input_2() {
+        assert_eq!(nb_visited(include_str!("../inputs/day9_ex2.txt"), 10), 36);
+    }
 }
