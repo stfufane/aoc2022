@@ -66,11 +66,9 @@ fn nb_visited(input: &str, nb_knots: usize) -> usize {
                 if knots[k].is_too_far(prev_knot) {
                     knots[k].get_closer(prev_knot);
                 }
-                // Add the last knot to the set of visited positions.
-                if k == knots.len() - 1 {
-                    visited.insert(knots.last().unwrap().clone());
-                }
             }
+            // Add the last knot to the set of visited positions.
+            visited.insert(knots.last().unwrap().clone());
         }
     });
     visited.len()
