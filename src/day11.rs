@@ -2,25 +2,29 @@ fn main() {
     const INPUT: &str = include_str!("../inputs/day11.txt");
     println!(
         "Monkey business after 20 rounds is {}",
-        monkey_business(INPUT)
+        monkey_business(INPUT, 1)
+    );
+    println!(
+        "Monkey business after 10000 rounds is {}",
+        monkey_business(INPUT, 2)
     );
 }
 
 struct Monkey {
-    items: Vec<u32>,
+    items: Vec<u64>,
     operation: Operation,
-    divisible: u32,
+    divisible: u64,
     target: (usize, usize),
     inspections: usize,
 }
 
-// This contains the index of the monkey to whom item is thrown and the value of the item
-type ThrownItem = (usize, u32);
+// This contains the index of the monkey to whom the item is thrown and the value of the item
+type ThrownItem = (usize, u64);
 // Contains the operator and the value of the operand (can be None when using the item value)
-type Operation = (char, Option<u32>);
+type Operation = (char, Option<u64>);
 
 impl Monkey {
-    fn new(items: Vec<u32>, operation: Operation, divisible: u32, target: (usize, usize)) -> Self {
+    fn new(items: Vec<u64>, operation: Operation, divisible: u64, target: (usize, usize)) -> Self {
         Monkey {
             items,
             operation,
@@ -31,7 +35,7 @@ impl Monkey {
     }
 
     // Tells which monkey will receive what
-    fn process_part1(&mut self) -> Vec<ThrownItem> {
+    fn process(&mut self, part: u8, lcm: u64) -> Vec<ThrownItem> {
         self.inspections += self.items.len();
         let mut thrown_items: Vec<ThrownItem> = Vec::new();
         thrown_items.reserve(self.items.len());
@@ -45,7 +49,14 @@ impl Monkey {
                 '+' => *item += operator,
                 _ => (),
             };
-            *item = ((*item as f32 / 3.0).floor()) as u32;
+
+            // Calm down strategy differing for each part.
+            if part == 1 {
+                *item = ((*item as f32 / 3.0).floor()) as u64;
+            } else {
+                *item %= lcm;
+            }
+
             thrown_items.push((
                 if *item % self.divisible == 0 {
                     self.target.0
@@ -70,7 +81,7 @@ fn parse_monkeys(input: &str) -> Vec<Monkey> {
             Monkey::new(
                 lines[1]
                     .split([',', ' '])
-                    .filter_map(|i| i.parse::<u32>().ok())
+                    .filter_map(|i| i.parse::<u64>().ok())
                     .collect(),
                 (
                     lines[2]
@@ -81,13 +92,13 @@ fn parse_monkeys(input: &str) -> Vec<Monkey> {
                         .chars()
                         .next()
                         .unwrap(),
-                    lines[2].split(' ').last().unwrap().parse::<u32>().ok(),
+                    lines[2].split(' ').last().unwrap().parse::<u64>().ok(),
                 ),
                 lines[3]
                     .split_whitespace()
                     .last()
                     .unwrap()
-                    .parse::<u32>()
+                    .parse::<u64>()
                     .unwrap(),
                 (
                     lines[4]
@@ -102,23 +113,24 @@ fn parse_monkeys(input: &str) -> Vec<Monkey> {
                         .unwrap()
                         .parse::<usize>()
                         .unwrap(),
-                )
+                ),
             )
         })
         .collect()
 }
 
-fn monkey_business(input: &str) -> usize {
+fn monkey_business(input: &str, part: u8) -> usize {
     let mut monkeys = parse_monkeys(input);
-    for _round in 0..20 {
+    let lcm = monkeys.iter().map(|monkey| monkey.divisible).product();
+    let nb_rounds = if part == 1 { 20 } else { 10000 };
+    for _round in 0..nb_rounds {
         for m in 0..monkeys.len() {
-            let thrown_items = monkeys[m].process_part1();
+            let thrown_items = monkeys[m].process(part, lcm);
             for item in thrown_items {
                 monkeys[item.0].items.push(item.1);
             }
         }
     }
-
     monkeys.sort_by(|a, b| b.inspections.cmp(&a.inspections));
     monkeys
         .iter()
@@ -134,8 +146,16 @@ mod test {
     #[test]
     fn validate_example_input_1() {
         assert_eq!(
-            monkey_business(include_str!("../inputs/day11_ex.txt")),
+            monkey_business(include_str!("../inputs/day11_ex.txt"), 1),
             10605
+        );
+    }
+
+    #[test]
+    fn validate_example_input_2() {
+        assert_eq!(
+            monkey_business(include_str!("../inputs/day11_ex.txt"), 2),
+            2713310158
         );
     }
 }
