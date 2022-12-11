@@ -2,11 +2,11 @@ fn main() {
     const INPUT: &str = include_str!("../inputs/day11.txt");
     println!(
         "Monkey business after 20 rounds is {}",
-        monkey_business(INPUT, 1)
+        monkey_business(INPUT, 20, 3)
     );
     println!(
         "Monkey business after 10000 rounds is {}",
-        monkey_business(INPUT, 2)
+        monkey_business(INPUT, 10000, 1)
     );
 }
 
@@ -35,7 +35,7 @@ impl Monkey {
     }
 
     // Tells which monkey will receive what
-    fn process(&mut self, part: u8, lcm: u64) -> Vec<ThrownItem> {
+    fn process(&mut self, worry: u64, lcm: u64) -> Vec<ThrownItem> {
         self.inspections += self.items.len();
         let mut thrown_items: Vec<ThrownItem> = Vec::new();
         thrown_items.reserve(self.items.len());
@@ -50,12 +50,8 @@ impl Monkey {
                 _ => (),
             };
 
-            // Calm down strategy differing for each part.
-            if part == 1 {
-                *item = ((*item as f32 / 3.0).floor()) as u64;
-            } else {
-                *item %= lcm;
-            }
+            // Chill dude
+            *item = (*item % lcm) / worry;
 
             thrown_items.push((
                 if *item % self.divisible == 0 {
@@ -119,13 +115,12 @@ fn parse_monkeys(input: &str) -> Vec<Monkey> {
         .collect()
 }
 
-fn monkey_business(input: &str, part: u8) -> usize {
+fn monkey_business(input: &str, nb_rounds: u16, worry: u64) -> usize {
     let mut monkeys = parse_monkeys(input);
     let lcm = monkeys.iter().map(|monkey| monkey.divisible).product();
-    let nb_rounds = if part == 1 { 20 } else { 10000 };
     for _round in 0..nb_rounds {
         for m in 0..monkeys.len() {
-            let thrown_items = monkeys[m].process(part, lcm);
+            let thrown_items = monkeys[m].process(worry, lcm);
             for item in thrown_items {
                 monkeys[item.0].items.push(item.1);
             }
@@ -146,7 +141,7 @@ mod test {
     #[test]
     fn validate_example_input_1() {
         assert_eq!(
-            monkey_business(include_str!("../inputs/day11_ex.txt"), 1),
+            monkey_business(include_str!("../inputs/day11_ex.txt"), 20, 3),
             10605
         );
     }
@@ -154,7 +149,7 @@ mod test {
     #[test]
     fn validate_example_input_2() {
         assert_eq!(
-            monkey_business(include_str!("../inputs/day11_ex.txt"), 2),
+            monkey_business(include_str!("../inputs/day11_ex.txt"), 10000, 1),
             2713310158
         );
     }
