@@ -2,15 +2,8 @@ use std::collections::VecDeque;
 
 const TARGET: char = 'E';
 
-fn bfs(input: &str) -> i32 {
-    let mut mountain: Vec<Vec<char>> = Vec::new();
-    input.lines().for_each(|line| {
-        mountain.push(line.chars().collect());
-    });
+fn bfs(mountain: &Vec<Vec<char>>, start_pos: (i32, i32)) -> i32 {
     let mut visited = vec![vec![None; mountain[0].len()]; mountain.len()];
-    
-    let start_pos = get_start(&mountain);
-    mountain[(start_pos.0) as usize][(start_pos.1) as usize] = 'a';
 
     let mut queue: VecDeque<(i32, i32)> = VecDeque::new();
     queue.push_back(start_pos);
@@ -32,8 +25,7 @@ fn bfs(input: &str) -> i32 {
                 prev_y = py;
                 prev_x = px;
             }
-
-            return path_taken.len() as i32 - 1; //Some(path_taken.into_iter().rev().collect());
+            return path_taken.len() as i32 - 1;
         }
 
         // Iterate over adjacent offsets
@@ -67,17 +59,8 @@ fn bfs(input: &str) -> i32 {
     0
 }
 
-fn get_start(data: &Vec<Vec<char>>) -> (i32, i32) {
-    for y in 0..data.len() {
-        let pos = data[y].iter().position(|c| *c == 'S');
-        if pos.is_some() {
-            return (y as i32, pos.unwrap() as i32);
-        }
-    }
-    (0, 0)
-}
-
 fn can_climb(from: char, to: char) -> bool {
+    from == 'S' || // We can go anywhere from the start
     from == 'z' && to == TARGET || // Reaching the summit, yay !
     to <= from && to != TARGET || // Moving to a lower spot
     match (to as u8).checked_sub(from as u8) { 
@@ -86,10 +69,47 @@ fn can_climb(from: char, to: char) -> bool {
     }
 }
 
-fn main() {
-    const INPUT: &str = include_str!("../inputs/day12.txt");
+fn get_mountain(input: &str) -> Vec<Vec<char>> {
+    let mut mountain: Vec<Vec<char>> = Vec::new();
+    input.lines().for_each(|line| {
+        mountain.push(line.chars().collect());
+    });
+    mountain
+}
 
-    println!("Shortest path is : {:?}", bfs(INPUT));
+fn get_start(mountain: &[Vec<char>]) -> (i32, i32) {
+    for (y, row) in mountain.iter().enumerate() {
+        if let Some(x) = row.iter().position(|c| *c == 'S') {
+            return (y as i32, x as i32);
+        }
+    }
+    (0, 0)
+}
+
+fn get_starts(mountain: &[Vec<char>]) -> Vec<(i32, i32)> {
+    let mut starts: Vec<(i32, i32)> = Vec::new();
+    for (y, row) in mountain.iter().enumerate() {
+        let mut line_starts = row.iter()
+            .enumerate()
+            .filter(|(_, &c)| c == 'a')
+            .map(|(x, _)| (y as i32, x as i32))
+            .collect::<Vec<(i32, i32)>>();
+        starts.append(&mut line_starts);
+    }
+    starts
+}
+
+fn best_path(mountain: &Vec<Vec<char>>) -> i32 {
+    get_starts(mountain).iter().map(|pos| {
+        bfs(mountain, *pos)
+    }).filter(|path| *path > 0).min().unwrap()
+}
+
+fn main() {
+    let mountain = get_mountain(include_str!("../inputs/day12.txt"));
+
+    println!("Shortest path for part 1 is : {}", bfs(&mountain, get_start(&mountain)));
+    println!("Shortest path for part 2 is : {}", best_path(&mountain));
 }
 
 #[cfg(test)]
@@ -98,12 +118,19 @@ mod test {
 
     #[test]
     fn validate_example_input_1() {
+        let mountain = get_mountain(include_str!("../inputs/day12_ex.txt"));
         assert_eq!(
-            bfs(include_str!("../inputs/day12_ex.txt")),
+            bfs(&mountain, get_start(&mountain)),
             31
         );
     }
 
-    println!("Found: {:?}", b);
-    println!("Size is {}", b.unwrap().len() - 1);
+    #[test]
+    fn validate_example_input_2() {
+        let mountain = get_mountain(include_str!("../inputs/day12_ex.txt"));
+        assert_eq!(
+            best_path(&mountain),
+            29
+        );
+    }
 }
