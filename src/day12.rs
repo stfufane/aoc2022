@@ -2,11 +2,15 @@ use std::collections::VecDeque;
 
 const TARGET: char = 'E';
 
-fn bfs(data: &mut Vec<Vec<char>>) -> Option<Vec<(i32, i32)>> {
-    let mut visited = vec![vec![None; data[0].len()]; data.len()];
+fn bfs(input: &str) -> i32 {
+    let mut mountain: Vec<Vec<char>> = Vec::new();
+    input.lines().for_each(|line| {
+        mountain.push(line.chars().collect());
+    });
+    let mut visited = vec![vec![None; mountain[0].len()]; mountain.len()];
     
-    let start_pos = get_start(data);
-    data[(start_pos.0) as usize][(start_pos.1) as usize] = 'a';
+    let start_pos = get_start(&mountain);
+    mountain[(start_pos.0) as usize][(start_pos.1) as usize] = 'a';
 
     let mut queue: VecDeque<(i32, i32)> = VecDeque::new();
     queue.push_back(start_pos);
@@ -16,7 +20,7 @@ fn bfs(data: &mut Vec<Vec<char>>) -> Option<Vec<(i32, i32)>> {
 
     while let Some((y, x)) = queue.pop_front() {
         // Check if this position is the target
-        if data[y as usize][x as usize] == TARGET {
+        if mountain[y as usize][x as usize] == TARGET {
             let mut path_taken = Vec::new();
             path_taken.push((y, x));
 
@@ -29,7 +33,7 @@ fn bfs(data: &mut Vec<Vec<char>>) -> Option<Vec<(i32, i32)>> {
                 prev_x = px;
             }
 
-            return Some(path_taken.into_iter().rev().collect());
+            return path_taken.len() as i32 - 1; //Some(path_taken.into_iter().rev().collect());
         }
 
         // Iterate over adjacent offsets
@@ -37,16 +41,16 @@ fn bfs(data: &mut Vec<Vec<char>>) -> Option<Vec<(i32, i32)>> {
             // Check if offset is within bounds
             if x + dx < 0
                 || y + dy < 0
-                || (y + dy) as usize >= data.len()
-                || (x + dx) as usize >= data[0].len()
+                || (y + dy) as usize >= mountain.len()
+                || (x + dx) as usize >= mountain[0].len()
             {
                 continue;
             }
 
             // Check if offset points to valid location
             if !can_climb(
-                    data[y as usize][x as usize],
-                    data[(y + dy) as usize][(x + dx) as usize]
+                    mountain[y as usize][x as usize],
+                    mountain[(y + dy) as usize][(x + dx) as usize]
                 )
             {
                 continue;
@@ -60,7 +64,7 @@ fn bfs(data: &mut Vec<Vec<char>>) -> Option<Vec<(i32, i32)>> {
             queue.push_back((y + dy, x + dx));
         }
     }
-    None
+    0
 }
 
 fn get_start(data: &Vec<Vec<char>>) -> (i32, i32) {
@@ -84,12 +88,21 @@ fn can_climb(from: char, to: char) -> bool {
 
 fn main() {
     const INPUT: &str = include_str!("../inputs/day12.txt");
-    let mut test_data: Vec<Vec<char>> = Vec::new();
-    INPUT.lines().for_each(|line| {
-        test_data.push(line.chars().collect());
-    });
 
-    let b = bfs(&mut test_data);
+    println!("Shortest path is : {:?}", bfs(INPUT));
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn validate_example_input_1() {
+        assert_eq!(
+            bfs(include_str!("../inputs/day12_ex.txt")),
+            31
+        );
+    }
 
     println!("Found: {:?}", b);
     println!("Size is {}", b.unwrap().len() - 1);
