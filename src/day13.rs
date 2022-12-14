@@ -10,7 +10,6 @@ fn main() {
 fn cmp_pair(left: &Value, right: &Value) -> Option<bool> {
     let mut idx = 0;
 
-    // Left is empty and right is not.
     if left.as_array().unwrap().is_empty() && !right.as_array().unwrap().is_empty() {
         return Some(true);
     }
