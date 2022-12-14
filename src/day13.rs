@@ -2,7 +2,7 @@ use serde_json::{json, Value};
 use std::cmp::Ordering;
 
 fn main() {
-    const INPUT: &str = include_str!("../inputs/day13_ex.txt");
+    const INPUT: &str = include_str!("../inputs/day13.txt");
     println!("Part 1 result is {}", process_part1(INPUT));
     println!("Part 2 is {}", process_part2(INPUT));
 }
@@ -31,7 +31,6 @@ fn cmp_pair(left: &Value, right: &Value) -> Option<bool> {
                 Ordering::Equal => None,
                 Ordering::Less => Some(true),
             };
-            println!("Compared 2 ints and result is {:?}", valid);
         }
 
         if lv.is_array() && rv.is_array() {
@@ -76,8 +75,55 @@ fn process_part1(input: &str) -> i32 {
         .sum()
 }
 
-fn process_part2(_input: &str) -> i32 {
-    0
+// Encapsulate json into a struct so I can implement Ord and PartialOrd
+#[derive(PartialEq, Eq)]
+struct Packet {
+    json: Value,
+}
+
+impl Packet {
+    fn new(json: Value) -> Self {
+        Packet { json }
+    }
+}
+
+impl PartialOrd for Packet {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Packet {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match cmp_pair(&self.json, &other.json) {
+            Some(true) => Ordering::Less,
+            Some(false) => Ordering::Greater,
+            None => Ordering::Equal,
+        }
+    }
+}
+
+fn process_part2(input: &str) -> i32 {
+    let mut extra_packets = vec![Packet::new(json!([[2]])), Packet::new(json!([[6]]))];
+    let mut all_packets: Vec<Packet> = input
+        .lines()
+        .filter(|line| !line.is_empty())
+        .map(|line| -> Packet { Packet::new(serde_json::from_str(line).unwrap()) })
+        .collect::<Vec<Packet>>();
+
+    all_packets.append(&mut extra_packets);
+    all_packets.sort();
+    all_packets
+        .iter()
+        .enumerate()
+        .filter_map(|(idx, packet)| -> Option<i32> {
+            if packet.json == json!([[2]]) || packet.json == json!([[6]]) {
+                Some((idx + 1) as i32)
+            } else {
+                None
+            }
+        })
+        .product()
 }
 
 #[cfg(test)]
