@@ -3,8 +3,8 @@ use itertools::Itertools;
 
 fn main() {
     const INPUT: &str = include_str!("../inputs/day14.txt");
-
     println!("Quantity of sand dropped = {}", process_part1(INPUT));
+    println!("Quantity of sand dropped = {}", process_part2(INPUT));
 }
 
 fn parse_rocks(input: &str) -> HashSet<(u32, u32)> {
@@ -38,6 +38,15 @@ fn parse_rocks(input: &str) -> HashSet<(u32, u32)> {
     blocked_coordinates
 }
 
+fn find_next(sand_drop: &(u32, u32), blocked_coordinates: &HashSet<(u32, u32)>) -> Option<(u32, u32)> {
+    let under: Vec<(u32, u32)> = vec![
+        (sand_drop.0, sand_drop.1 + 1),
+        (sand_drop.0 - 1, sand_drop.1 + 1),
+        (sand_drop.0 + 1, sand_drop.1 + 1),
+    ];
+    under.into_iter().find(|pos| !blocked_coordinates.contains(pos))
+}
+
 fn drop_sand(blocked_coordinates: &mut HashSet<(u32, u32)>) -> u32 {
     // Get the bottom edge of the cave
     let max_y = blocked_coordinates.iter().map(|pair| pair.1).max().unwrap();
@@ -46,14 +55,8 @@ fn drop_sand(blocked_coordinates: &mut HashSet<(u32, u32)>) -> u32 {
     let mut sand_drops: u32 = 0;
     loop {
         // Go down until we've met the edges.
-        let under: Vec<(u32, u32)> = vec![
-            (sand_drop.0, sand_drop.1 + 1),
-            (sand_drop.0 - 1, sand_drop.1 + 1),
-            (sand_drop.0 + 1, sand_drop.1 + 1),
-        ];
-        let found_next = under.iter().find(|&pos| !blocked_coordinates.contains(pos));
-        if let Some(next_position) = found_next {
-            sand_drop = *next_position;
+        if let Some(next_position) = find_next(&sand_drop, &blocked_coordinates) {
+            sand_drop = next_position;
             if sand_drop.1 >= max_y {
                 break;
             }
@@ -66,12 +69,37 @@ fn drop_sand(blocked_coordinates: &mut HashSet<(u32, u32)>) -> u32 {
     sand_drops
 }
 
+fn drop_sand_to_the_top(blocked_coordinates: &mut HashSet<(u32, u32)>) -> u32 {
+    let max_y = blocked_coordinates.iter().map(|pair| pair.1).max().unwrap() + 2;
+    let mut sand_drop = (500u32, 0u32);
+    let mut sand_drops: u32 = 0;
+    loop {
+        if let Some(next_position) = find_next(&sand_drop, &blocked_coordinates) {
+            sand_drop = next_position;
+            if sand_drop.1 == (max_y - 1) {
+                blocked_coordinates.insert(sand_drop);
+                sand_drops += 1;
+                sand_drop = (500u32, 0u32);
+            }
+        } else {
+            if sand_drop.0 == 500 && sand_drop.1 == 0 {
+                sand_drops += 1;
+                break;
+            }
+            blocked_coordinates.insert(sand_drop);
+            sand_drops += 1;
+            sand_drop = (500u32, 0u32);
+        }
+    }
+    sand_drops
+}
+
 fn process_part1(input: &str) -> u32 {
     drop_sand(&mut parse_rocks(input))
 }
 
-fn process_part2(_input: &str) -> u32 {
-    93
+fn process_part2(input: &str) -> u32 {
+    drop_sand_to_the_top(&mut parse_rocks(input))
 }
 
 #[cfg(test)]
