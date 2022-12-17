@@ -116,9 +116,15 @@ fn main() {
 mod test {
     use super::*;
 
+    const EXAMPLE_DATA: &str = "Sabqponm
+abcryxxl
+accszExk
+acctuvwj
+abdefghi";
+
     #[test]
     fn validate_example_input_1() {
-        let mountain = get_mountain(include_str!("../inputs/day12_ex.txt"));
+        let mountain = get_mountain(EXAMPLE_DATA);
         assert_eq!(
             bfs(&mountain, get_start(&mountain)),
             31
@@ -127,7 +133,7 @@ mod test {
 
     #[test]
     fn validate_example_input_2() {
-        let mountain = get_mountain(include_str!("../inputs/day12_ex.txt"));
+        let mountain = get_mountain(EXAMPLE_DATA);
         assert_eq!(
             best_path(&mountain),
             29

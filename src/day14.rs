@@ -55,7 +55,7 @@ fn drop_sand(blocked_coordinates: &mut HashSet<(u32, u32)>) -> u32 {
     let mut sand_drops: u32 = 0;
     loop {
         // Go down until we've met the edges.
-        if let Some(next_position) = find_next(&sand_drop, &blocked_coordinates) {
+        if let Some(next_position) = find_next(&sand_drop, blocked_coordinates) {
             sand_drop = next_position;
             if sand_drop.1 >= max_y {
                 break;
@@ -74,7 +74,7 @@ fn drop_sand_to_the_top(blocked_coordinates: &mut HashSet<(u32, u32)>) -> u32 {
     let mut sand_drop = (500u32, 0u32);
     let mut sand_drops: u32 = 0;
     loop {
-        if let Some(next_position) = find_next(&sand_drop, &blocked_coordinates) {
+        if let Some(next_position) = find_next(&sand_drop, blocked_coordinates) {
             sand_drop = next_position;
             if sand_drop.1 == (max_y - 1) {
                 blocked_coordinates.insert(sand_drop);

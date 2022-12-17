@@ -138,10 +138,38 @@ fn monkey_business(input: &str, nb_rounds: u16, worry: u64) -> usize {
 mod test {
     use super::*;
 
+    const EXAMPLE_DATA: &str = "Monkey 0:
+Starting items: 79, 98
+Operation: new = old * 19
+Test: divisible by 23
+    If true: throw to monkey 2
+    If false: throw to monkey 3
+
+Monkey 1:
+Starting items: 54, 65, 75, 74
+Operation: new = old + 6
+Test: divisible by 19
+    If true: throw to monkey 2
+    If false: throw to monkey 0
+
+Monkey 2:
+Starting items: 79, 60, 97
+Operation: new = old * old
+Test: divisible by 13
+    If true: throw to monkey 1
+    If false: throw to monkey 3
+
+Monkey 3:
+Starting items: 74
+Operation: new = old + 3
+Test: divisible by 17
+    If true: throw to monkey 0
+    If false: throw to monkey 1";
+
     #[test]
     fn validate_example_input_1() {
         assert_eq!(
-            monkey_business(include_str!("../inputs/day11_ex.txt"), 20, 3),
+            monkey_business(EXAMPLE_DATA, 20, 3),
             10605
         );
     }
@@ -149,7 +177,7 @@ mod test {
     #[test]
     fn validate_example_input_2() {
         assert_eq!(
-            monkey_business(include_str!("../inputs/day11_ex.txt"), 10000, 1),
+            monkey_business(EXAMPLE_DATA, 10000, 1),
             2713310158
         );
     }

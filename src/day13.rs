@@ -129,13 +129,37 @@ fn process_part2(input: &str) -> i32 {
 mod test {
     use super::*;
 
+    const EXAMPLE_DATA: &str = "[1,1,3,1,1]
+[1,1,5,1,1]
+
+[[1],[2,3,4]]
+[[1],4]
+
+[9]
+[[8,7,6]]
+
+[[4,4],4,4]
+[[4,4],4,4,4]
+
+[7,7,7,7]
+[7,7,7]
+
+[]
+[3]
+
+[[[]]]
+[[]]
+
+[1,[2,[3,[4,[5,6,7]]]],8,9]
+[1,[2,[3,[4,[5,6,0]]]],8,9]";
+
     #[test]
     fn validate_example_input_1() {
-        assert_eq!(process_part1(include_str!("../inputs/day13_ex.txt")), 13);
+        assert_eq!(process_part1(EXAMPLE_DATA), 13);
     }
 
     #[test]
     fn validate_example_input_2() {
-        assert_eq!(process_part2(include_str!("../inputs/day13_ex.txt")), 140);
+        assert_eq!(process_part2(EXAMPLE_DATA), 140);
     }
 }

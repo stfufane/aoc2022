@@ -44,7 +44,7 @@ fn draw_crt(input: &str) -> String {
         }
         result.push(*cycle);
         if position == 39 {
-            result += "\r\n";
+            result += "\n";
         }
 
         if !read_next {
@@ -82,7 +82,13 @@ mod test {
     fn validate_example_input_2() {
         assert_eq!(
             draw_crt(include_str!("../inputs/day10_ex.txt")),
-            include_str!("../inputs/day10_ex_result.txt")
+"##..##..##..##..##..##..##..##..##..##..
+###...###...###...###...###...###...###.
+####....####....####....####....####....
+#####.....#####.....#####.....#####.....
+######......######......######......####
+#######.......#######.......#######.....
+"
         )
     }
 }
