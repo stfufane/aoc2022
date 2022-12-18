@@ -76,20 +76,16 @@ fn drop_sand_to_the_top(blocked_coordinates: &mut HashSet<(u32, u32)>) -> u32 {
     loop {
         if let Some(next_position) = find_next(&sand_drop, blocked_coordinates) {
             sand_drop = next_position;
-            if sand_drop.1 == (max_y - 1) {
-                blocked_coordinates.insert(sand_drop);
-                sand_drops += 1;
-                sand_drop = (500u32, 0u32);
+            if sand_drop.1 < (max_y - 1) {
+                continue;
             }
-        } else {
-            if sand_drop.0 == 500 && sand_drop.1 == 0 {
-                sand_drops += 1;
-                break;
-            }
-            blocked_coordinates.insert(sand_drop);
+        } else if sand_drop.0 == 500 && sand_drop.1 == 0 {
             sand_drops += 1;
-            sand_drop = (500u32, 0u32);
+            break;
         }
+        blocked_coordinates.insert(sand_drop);
+        sand_drops += 1;
+        sand_drop = (500u32, 0u32);
     }
     sand_drops
 }
