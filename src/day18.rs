@@ -6,14 +6,33 @@ fn main() {
     println!("Nb visible faces = {}", process_part2(INPUT));
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 struct Cube {
     x: i32,
     y: i32,
     z: i32,
+    element: Element,
 }
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+enum Element {
+    BOUNDS,
+    LAVA,
+    WATER,
+    AIR,
+}
+type Coordinates = (i32, i32, i32);
+
 impl Cube {
+    fn new(coords: (i32, i32, i32), element: Element) -> Self {
+        Cube {
+            x: coords.0,
+            y: coords.1,
+            z: coords.2,
+            element,
+        }
+    }
+
     fn is_adjacent(&self, other: &Cube) -> bool {
         other.x.abs_diff(self.x) + other.y.abs_diff(self.y) + other.z.abs_diff(self.z) == 1
     }
@@ -25,10 +44,10 @@ fn parse_cubes(input: &str) -> Vec<Cube> {
         .map(|line| {
             line.split(',')
                 .map(|s| s.parse::<i32>().unwrap())
-                .collect_tuple::<(i32, i32, i32)>()
+                .collect_tuple::<Coordinates>()
                 .unwrap()
         })
-        .map(|(x, y, z)| Cube { x, y, z })
+        .map(|(x, y, z)| Cube::new((x, y, z), Element::LAVA))
         .collect::<Vec<Cube>>()
 }
 
@@ -41,134 +60,131 @@ fn process_part1(input: &str) -> u32 {
     faces as u32
 }
 
-fn add_surrounding_cube(
-    surrounding_cubes: &mut Vec<Cube>,
-    cubes: &[Cube],
-    cube: Cube,
-    first_loop: bool,
-) {
-    let cube_already_there = cubes
+fn neighbours(coords: Coordinates) -> Vec<Coordinates> {
+    vec![
+        (coords.0 - 1, coords.1, coords.2),
+        (coords.0 + 1, coords.1, coords.2),
+        (coords.0, coords.1 - 1, coords.2),
+        (coords.0, coords.1 + 1, coords.2),
+        (coords.0, coords.1, coords.2 - 1),
+        (coords.0, coords.1, coords.2 + 1),
+    ]
+}
+
+fn is_cube_there(cubes: &[Cube], coords: Coordinates) -> bool {
+    cubes.iter().any(|c| (c.x, c.y, c.z) == coords)
+}
+
+fn is_coords_taken(cubes: &[Cube], coords: Coordinates) -> bool {
+    cubes
         .iter()
-        .any(|c| c.x == cube.x && c.y == cube.y && c.z == cube.z);
-    if first_loop
-        // || (cube_already_there
-        //     && cubes
-        //         .iter()
-        //         .filter(|other| other.is_adjacent(&cube))
-        //         .count()
-        //         == 0)
-        || (!cube_already_there
-            && surrounding_cubes.iter().any(|c| c.is_adjacent(&cube))
-            && !surrounding_cubes
-                .iter()
-                .any(|c| c.x == cube.x && c.y == cube.y && c.z == cube.z))
-    {
-        surrounding_cubes.push(cube);
-    }
+        .any(|c| c.x == coords.0 && c.y == coords.1 && c.z == coords.2)
+}
+
+fn is_in_bounds(coords: Coordinates, bounds: Coordinates) -> bool {
+    coords.0 >= 0
+        && coords.0 <= bounds.0
+        && coords.1 >= 0
+        && coords.1 <= bounds.1
+        && coords.2 >= 0
+        && coords.2 <= bounds.2
+}
+
+fn is_water_or_bounds(cubes: &[Cube], coords: Coordinates) -> bool {
+    let element = get_element(&cubes, coords);
+    element == Element::WATER || element == Element::BOUNDS
+}
+
+fn get_element(cubes: &[Cube], coords: Coordinates) -> Element {
+    cubes
+        .iter()
+        .find(|&c| c.x == coords.0 && c.y == coords.1 && c.z == coords.2)
+        .map(|found| found.element)
+        .unwrap_or(Element::AIR)
 }
 
 fn process_part2(input: &str) -> u32 {
-    let cubes = parse_cubes(input);
-    let mut surrounding_cubes: Vec<Cube> = Vec::new();
+    let mut cubes = parse_cubes(input);
+    let x_max = cubes.iter().map(|cube| cube.x).max().unwrap() + 1;
+    let y_max = cubes.iter().map(|cube| cube.y).max().unwrap() + 1;
+    let z_max = cubes.iter().map(|cube| cube.z).max().unwrap() + 1;
+    let bounds = (x_max, y_max, z_max);
 
-    let mut x_left = cubes.iter().map(|cube| cube.x).min().unwrap() - 1;
-    let mut x_right = cubes.iter().map(|cube| cube.x).max().unwrap() + 1;
-    let mut y_bottom = cubes.iter().map(|cube| cube.y).min().unwrap() - 1;
-    let mut y_top = cubes.iter().map(|cube| cube.y).max().unwrap() + 1;
-    let mut z_front = cubes.iter().map(|cube| cube.z).min().unwrap() - 1;
-    let mut z_rear = cubes.iter().map(|cube| cube.z).max().unwrap() + 1;
-    let mut faces = 0;
+    // Add the bounds around the droplet
+    for y in -1..=y_max {
+        for z in -1..=z_max {
+            if !is_coords_taken(&cubes, (-1, y, z)) {
+                cubes.push(Cube::new((-1, y, z), Element::BOUNDS));
+            }
+            if !is_coords_taken(&cubes, (x_max, y, z)) {
+                cubes.push(Cube::new((x_max, y, z), Element::BOUNDS));
+            }
+        }
+    }
+    for x in -1..=x_max {
+        for z in -1..=z_max {
+            if !is_coords_taken(&cubes, (x, -1, z)) {
+                cubes.push(Cube::new((x, -1, z), Element::BOUNDS));
+            }
+            if !is_coords_taken(&cubes, (x, y_max, z)) {
+                cubes.push(Cube::new((x, y_max, z), Element::BOUNDS));
+            }
+        }
+    }
+    for x in -1..=x_max {
+        for y in -1..=y_max {
+            if !is_coords_taken(&cubes, (x, y, -1)) {
+                cubes.push(Cube::new((x, y, -1), Element::BOUNDS));
+            }
+            if !is_coords_taken(&cubes, (x, y, z_max)) {
+                cubes.push(Cube::new((x, y, z_max), Element::BOUNDS));
+            }
+        }
+    }
 
-    let mut first_loop = true;
+    let mut water_drops: Vec<Cube> =
+        vec![Cube::new((x_max - 1, y_max - 1, z_max - 1), Element::WATER)];
+    // Flood the bounds with water.
     loop {
-        // First add to the left edge and right edge
-        for y in y_bottom..=y_top {
-            for z in z_front..=z_rear {
-                add_surrounding_cube(
-                    &mut surrounding_cubes,
-                    &cubes,
-                    Cube { x: x_left, y, z },
-                    first_loop,
-                );
-                add_surrounding_cube(
-                    &mut surrounding_cubes,
-                    &cubes,
-                    Cube { x: x_right, y, z },
-                    first_loop,
-                );
-            }
-        }
-        // Then the top and bottom
-        for x in x_left..=x_right {
-            for z in z_front..=z_rear {
-                add_surrounding_cube(
-                    &mut surrounding_cubes,
-                    &cubes,
-                    Cube { x, y: y_bottom, z },
-                    first_loop,
-                );
-                add_surrounding_cube(
-                    &mut surrounding_cubes,
-                    &cubes,
-                    Cube { x, y: y_top, z },
-                    first_loop,
-                );
-            }
-        }
-        // Finally the front and rear
-        for x in x_left..=x_right {
-            for y in y_bottom..=y_top {
-                add_surrounding_cube(
-                    &mut surrounding_cubes,
-                    &cubes,
-                    Cube { x, y, z: z_front },
-                    first_loop,
-                );
-                add_surrounding_cube(
-                    &mut surrounding_cubes,
-                    &cubes,
-                    Cube { x, y, z: z_rear },
-                    first_loop,
-                );
-            }
-        }
-        first_loop = false;
-        if x_left <= x_right {
-            x_left += 1;
-            x_right -= 1;
-        }
-        if y_bottom <= y_top {
-            y_bottom += 1;
-            y_top -= 1;
-        }
-        if z_front <= z_rear {
-            z_front += 1;
-            z_rear -= 1;
-        }
-        if x_left > x_right && y_bottom > y_top && z_front > z_rear {
+        let mut water_drop = water_drops.pop().unwrap();
+        cubes.push(water_drop.clone());
+        neighbours((water_drop.x, water_drop.y, water_drop.z))
+            .iter()
+            .filter(|&neighbour| {
+                !is_cube_there(&cubes, *neighbour) && is_in_bounds(*neighbour, bounds)
+            })
+            .for_each(|&neighbour| {
+                (water_drop.x, water_drop.y, water_drop.z) = neighbour;
+                water_drops.push(water_drop.clone());
+            });
+        if water_drops.is_empty() {
             break;
         }
     }
 
-    // Print slice by slice
-    // for x in cubes.iter().map(|cube| cube.x).min().unwrap() - 1
-    //     ..=cubes.iter().map(|cube| cube.x).max().unwrap() + 1
-    // {
-    //     for y in cubes.iter().map(|cube| cube.y).min().unwrap() - 1
-    //         ..=cubes.iter().map(|cube| cube.y).max().unwrap() + 1
-    //     {
-    //         for z in cubes.iter().map(|cube| cube.z).min().unwrap() - 1
-    //             ..=cubes.iter().map(|cube| cube.z).max().unwrap() + 1
-    //         {
-    //             if surrounding_cubes
-    //                 .iter()
-    //                 .any(|cube| cube == &Cube { x, y, z })
-    //             {
-    //                 print!("[-]");
-    //             } else if cubes.iter().any(|cube| cube == &Cube { x, y, z }) {
-    //                 print!("[0]");
-    //             } else {
-    //                 print!("[ ]");
+    let mut faces = 0;
+    for z in 0..z_max {
+        for y in 0..y_max {
+            for x in 0..x_max {
+                if get_element(&cubes, (x, y, z)) == Element::LAVA {
+                    faces += neighbours((x, y, z))
+                        .iter()
+                        .filter(|&neighbour| is_water_or_bounds(&cubes, *neighbour))
+                        .count();
+                }
+            }
+        }
+    }
+
+    // Print the slices
+    // for x in -1..=x_max {
+    //     for y in -1..y_max {
+    //         for z in -1..y_max {
+    //             match get_element(&cubes, (x, y, z)) {
+    //                 Element::AIR => { print!("[ ]"); },
+    //                 Element::BOUNDS => { print!("[-]"); },
+    //                 Element::LAVA => { print!("[0]"); },
+    //                 Element::WATER => { print!("[~]"); }
     //             }
     //         }
     //         println!();
@@ -177,12 +193,6 @@ fn process_part2(input: &str) -> u32 {
     //     println!();
     // }
 
-    for cube in cubes.iter() {
-        faces += surrounding_cubes
-            .iter()
-            .filter(|other| other.is_adjacent(cube))
-            .count();
-    }
     faces as u32
 }
 
