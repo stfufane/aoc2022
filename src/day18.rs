@@ -81,13 +81,13 @@ fn is_coords_taken(cubes: &[Cube], coords: Coordinates) -> bool {
         .any(|c| c.x == coords.0 && c.y == coords.1 && c.z == coords.2)
 }
 
-fn is_in_bounds(coords: Coordinates, bounds: Coordinates) -> bool {
-    coords.0 >= 0
-        && coords.0 <= bounds.0
-        && coords.1 >= 0
-        && coords.1 <= bounds.1
-        && coords.2 >= 0
-        && coords.2 <= bounds.2
+fn is_in_bounds(coords: Coordinates, bounds: (Coordinates, Coordinates)) -> bool {
+    coords.0 >= bounds.0.0
+        && coords.0 <= bounds.1.0
+        && coords.1 >= bounds.0.1
+        && coords.1 <= bounds.1.1
+        && coords.2 >= bounds.0.2
+        && coords.2 <= bounds.1.2
 }
 
 fn is_water_or_bounds(cubes: &[Cube], coords: Coordinates) -> bool {
@@ -108,7 +108,7 @@ fn process_part2(input: &str) -> u32 {
     let x_max = cubes.iter().map(|cube| cube.x).max().unwrap() + 1;
     let y_max = cubes.iter().map(|cube| cube.y).max().unwrap() + 1;
     let z_max = cubes.iter().map(|cube| cube.z).max().unwrap() + 1;
-    let bounds = (x_max, y_max, z_max);
+    let bounds = ((0, 0, 0), (x_max, y_max, z_max));
 
     // Add the bounds around the droplet
     for y in -1..=y_max {
@@ -162,20 +162,6 @@ fn process_part2(input: &str) -> u32 {
         }
     }
 
-    let mut faces = 0;
-    for z in 0..z_max {
-        for y in 0..y_max {
-            for x in 0..x_max {
-                if get_element(&cubes, (x, y, z)) == Element::LAVA {
-                    faces += neighbours((x, y, z))
-                        .iter()
-                        .filter(|&neighbour| is_water_or_bounds(&cubes, *neighbour))
-                        .count();
-                }
-            }
-        }
-    }
-
     // Print the slices
     // for x in -1..=x_max {
     //     for y in -1..y_max {
@@ -193,7 +179,17 @@ fn process_part2(input: &str) -> u32 {
     //     println!();
     // }
 
-    faces as u32
+    // Count the cubes that have water or bounds as neighbours
+    cubes
+        .iter()
+        .filter(|&cube| cube.element == Element::LAVA)
+        .map(|&cube| -> usize {
+            neighbours((cube.x, cube.y, cube.z))
+                .iter()
+                .filter(|&neighbour| is_water_or_bounds(&cubes, *neighbour))
+                .count()
+        })
+        .sum::<usize>() as u32
 }
 
 #[cfg(test)]
