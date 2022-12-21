@@ -12,9 +12,9 @@ impl Range {
         Range { start, end }
     }
 
-    pub fn overlaps(&self, other: &Range) -> bool {
-        (other.start >= self.start && other.start <= self.end)
-            || (other.end >= self.start && other.end <= self.end)
+    pub fn is_adjacent(&self, other: &Range) -> bool {
+        (other.start >= self.start && other.start <= self.end + 1)
+            || (other.end >= self.start + 1 && other.end <= self.end)
     }
 
     pub fn merge(&mut self, other: &Range) {
@@ -41,7 +41,7 @@ pub struct RangeStack {
 impl RangeStack {
     pub fn add(&mut self, range: &Range) {
         if let Some(last) = self.ranges.last_mut() {
-            if last.overlaps(range) {
+            if last.is_adjacent(range) {
                 last.merge(range);
                 return;
             }
